@@ -448,13 +448,14 @@ class SearchTypeInline(StatesGroup):
 @dp.message_handler(text=['🔍 Поиск по каталогу'])
 async def search(message: types.Message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(types.KeyboardButton('Антифриз'))
-    markup.add(types.KeyboardButton('Масло моторное'))
-    markup.add(types.KeyboardButton('Свечи'))
+    markup.add(types.KeyboardButton('🔹 Антифриз'))
+    markup.add(types.KeyboardButton('🔹 Масло моторное'))
+    markup.add(types.KeyboardButton('🔹 Свечи'))
+    markup.add(types.KeyboardButton('🔹 Тормозная жидкость'))
     markup.add(types.KeyboardButton('◀ Назад'))
-    await message.answer('🔍Введите интересующий вас товар:\n\n'
+    await message.answer('🔍 Нажмите на интересующий вас товар:\n\n'
                          '(<i>Например: Свечи, Масло моторное, Антифриз и т.д.</i>)'
-                         '\n\nКаталог постоянно обновляется! \nЕсли вы не нашли интересующий вас товар, свяжитель с консультантом при помощи кнопки '
+                         '\n\n❗ Каталог постоянно обновляется! \nЕсли вы не нашли интересующий вас товар, свяжитель с консультантом при помощи кнопки '
                          '"👤 Онлайн-консультант"', parse_mode='html', reply_markup=markup)
 
     await SearchType.waiting_for_product_type.set()
@@ -468,50 +469,82 @@ async def process_send_message(message: types.Message, state: FSMContext):
         await start(message)
 
     # Антифриз
-    elif message.text == 'Антифриз':
-        mycursor.execute("SELECT Name, Manufacturer, Quantity, Price FROM product WHERE Type = 'Антифриз' LIMIT 1;")
+    elif message.text == '🔹 Антифриз':
+        mycursor.execute("SELECT Name, Manufacturer, Quantity, Price, Url FROM product WHERE Type = 'Антифриз' LIMIT 1;")
         result = mycursor.fetchone()
         if result is not None:
             # Добавление кнопки "Следующий товар"
             markup = types.InlineKeyboardMarkup()
             markup.add(
-                types.InlineKeyboardButton('➡', callback_data='next_product1'),
+                types.InlineKeyboardButton('➡', callback_data='next_product1')
             )
-            await message.answer_photo('https://img-server-10.parts-soft.ru/images/1922/15427145')
+            await message.answer_photo('https://f.nodacdn.net/351551')
             await message.answer(
                 'Нажмите кнопку для просмотра товаров категории "Антифриз".',
                 reply_markup=markup)
 
             await SearchTypeInline.waiting_for_next_product1.set()
         else:
-            await message.reply('Товаров с типом "Антифриз" нет!')
+            await message.reply('Товаров категории "Антифриз" нет!')
     elif message.text == '◀ Назад':
         await state.finish()
         await start(message)
-        # Масло моторное
-    elif message.text == 'Масло моторное':
-        mycursor.execute("SELECT Name, Manufacturer, Quantity, Price FROM `product` WHERE Type = 'Масло моторное';")
-        result = mycursor.fetchall()
-        if len(result) > 0:
-            products_list = '\n\n'.join(
-                [f'{name[0]} \nПроизводитель: {name[1]} \nКоличество: {name[2]} шт. \nЦена: {name[3]} рублей' for name in
-                 result])
-            await message.reply(f'Товары с типом "Масло моторное":\n\n{products_list}')
+
+    # Масло моторное
+    elif message.text == '🔹 Масло моторное':
+        mycursor.execute(
+            "SELECT Name, Manufacturer, Quantity, Price, Url FROM product WHERE Type = 'Масло моторное' LIMIT 1;")
+        result = mycursor.fetchone()
+        if result is not None:
+            # Добавление кнопки "Следующий товар"
+            markup = types.InlineKeyboardMarkup()
+            markup.add(
+                types.InlineKeyboardButton('➡', callback_data='next_product2')
+            )
+            await message.answer_photo('https://bmw-apan.ro/wp-content/uploads/sites/15/2019/06/bmw-service-avantaje-ulei-bmw-original.jpg')
+            await message.answer(
+                'Нажмите кнопку для просмотра товаров категории "Масло моторное".',
+                reply_markup=markup)
+
+            await SearchTypeInline.waiting_for_next_product1.set()
         else:
-            await message.reply('Товаров с типом "Масло моторное" нет!')
+            await message.reply('Товаров категории "Масло моторное" нет!')
+    elif message.text == '◀ Назад':
+        await state.finish()
+        await start(message)
+
+    # Тормозная жидкость
+    elif message.text == '🔹 Тормозная жидкость':
+        mycursor.execute(
+            "SELECT Name, Manufacturer, Quantity, Price, Url FROM product WHERE Type = 'Тормозная жидкость' LIMIT 1;")
+        result = mycursor.fetchone()
+        if result is not None:
+            # Добавление кнопки "Следующий товар"
+            markup = types.InlineKeyboardMarkup()
+            markup.add(
+                types.InlineKeyboardButton('➡', callback_data='next_product3')
+            )
+            await message.answer_photo('https://cs14.pikabu.ru/post_img/2022/09/08/7/og_og_1662637522212180444.jpg')
+            await message.answer(
+                'Нажмите кнопку для просмотра товаров категории "Тормозная жидкость".',
+                reply_markup=markup)
+
+            await SearchTypeInline.waiting_for_next_product1.set()
+        else:
+            await message.reply('Товаров категории "Тормозная жидкость" нет!')
     elif message.text == '◀ Назад':
         await state.finish()
         await start(message)
 
     # Свечи
-    elif message.text == 'Свечи':
+    elif message.text == '🔹 Свечи':
         mycursor.execute("SELECT Name, Manufacturer, Quantity, Price FROM `product` WHERE Type = 'Свечи';")
         result = mycursor.fetchall()
         if len(result) > 0:
             products_list = '\n\n'.join(
                 [f'{name[0]} \nПроизводитель: {name[1]} \nКоличество: {name[2]} шт. \nЦена: {name[3]} рублей' for name in
                  result])
-            await message.reply(f'Товары с типом "Свечи":\n\n{products_list}')
+            await message.reply(f'📦 Товары с типом "Свечи":\n\n{products_list}')
         else:
             await message.reply('Товаров с типом "Свечи" нет!')
     elif message.text == '◀ Назад':
@@ -531,19 +564,17 @@ async def process_next_product_callback(callback_query: types.CallbackQuery, sta
     mydb = database_connect
     mycursor = mydb.cursor()
     mycursor.execute(
-        "SELECT Name, Manufacturer, Quantity, Price FROM product WHERE Type = 'Антифриз' LIMIT 1 OFFSET %s;",
+        "SELECT Name, Manufacturer, Quantity, Price, Url FROM product WHERE Type = 'Антифриз' LIMIT 1 OFFSET %s;",
         (product_index,))
     result = mycursor.fetchone()
 
     if result is not None:
-        products_list = f'{result[0]} \nПроизводитель: {result[1]} \nКоличество: {result[2]} шт. \nЦена: {result[3]} рублей'
+        products_list = f'{result[0]} \nПроизводитель: {result[1]} \nКоличество: {result[2]} шт. \nЦена: {result[3]} руб. \n<a href="{result[4]}">Страница товара</a>'
 
-        await callback_query.message.edit_text(f'🟢 Товары категории "Антифриз":\n\n{products_list}')
+        await callback_query.message.edit_text(f'📦 Товары категории "Антифриз":\n\n{products_list}', parse_mode=types.ParseMode.HTML)
 
         # Обновите индекс товара в состоянии
         await state.update_data(product_index=product_index + 1)
-
-        # Add inline buttons here for the user to view the next and previous product
         markup = types.InlineKeyboardMarkup()
         markup.add(
             types.InlineKeyboardButton('➡', callback_data='next_product1'),
@@ -551,12 +582,66 @@ async def process_next_product_callback(callback_query: types.CallbackQuery, sta
         )
         await callback_query.message.edit_reply_markup(reply_markup=markup)
     else:
-        await callback_query.message.edit_text('Товаров категории "Антифриз" больше нет!')
+        await state.finish()
+        await callback_query.message.edit_text('Товары категории "Антифриз" закончились!')
 
+# Масло моторное Inline
+@dp.callback_query_handler(lambda c: c.data == 'next_product2', state=SearchTypeInline.waiting_for_next_product1)
+async def process_next_product_callback(callback_query: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    product_index = data.get('product_index', 0)
+    mydb = database_connect
+    mycursor = mydb.cursor()
+    mycursor.execute(
+        "SELECT Name, Manufacturer, Quantity, Price, Url FROM product WHERE Type = 'Масло моторное' LIMIT 1 OFFSET %s;",
+        (product_index,))
+    result = mycursor.fetchone()
 
+    if result is not None:
+        products_list = f'{result[0]} \nПроизводитель: {result[1]} \nКоличество: {result[2]} шт. \nЦена: {result[3]} руб. \n<a href="{result[4]}">Страница товара</a>'
 
+        await callback_query.message.edit_text(f'📦 Товары категории "Масло моторное":\n\n{products_list}', parse_mode=types.ParseMode.HTML)
 
+        # Обновите индекс товара в состоянии
+        await state.update_data(product_index=product_index + 1)
+        markup = types.InlineKeyboardMarkup()
+        markup.add(
+            types.InlineKeyboardButton('➡', callback_data='next_product2'),
 
+        )
+        await callback_query.message.edit_reply_markup(reply_markup=markup)
+    else:
+        await state.finish()
+        await callback_query.message.edit_text('Товары категории "Масло моторное" закончились!')
+
+# Тормозная жидкость Inline
+@dp.callback_query_handler(lambda c: c.data == 'next_product3', state=SearchTypeInline.waiting_for_next_product1)
+async def process_next_product_callback(callback_query: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    product_index = data.get('product_index', 0)
+    mydb = database_connect
+    mycursor = mydb.cursor()
+    mycursor.execute(
+        "SELECT Name, Manufacturer, Quantity, Price, Url FROM product WHERE Type = 'Тормозная жидкость' LIMIT 1 OFFSET %s;",
+        (product_index,))
+    result = mycursor.fetchone()
+
+    if result is not None:
+        products_list = f'{result[0]} \nПроизводитель: {result[1]} \nКоличество: {result[2]} шт. \nЦена: {result[3]} руб. \n<a href="{result[4]}">Страница товара</a>'
+
+        await callback_query.message.edit_text(f'📦 Товары категории "Тормозная жидкость":\n\n{products_list}', parse_mode=types.ParseMode.HTML)
+
+        # Обновите индекс товара в состоянии
+        await state.update_data(product_index=product_index + 1)
+        markup = types.InlineKeyboardMarkup()
+        markup.add(
+            types.InlineKeyboardButton('➡', callback_data='next_product3'),
+
+        )
+        await callback_query.message.edit_reply_markup(reply_markup=markup)
+    else:
+        await state.finish()
+        await callback_query.message.edit_text('Товары категории "Тормозная жидкость" закончились!')
 
 
 
