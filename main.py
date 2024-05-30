@@ -1,24 +1,17 @@
 import asyncio
-import re
 from asyncio import exceptions
-import aiogram
-import requests
 from aiogram import exceptions
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters import state
 from aiogram.types.web_app_info import WebAppInfo
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-import asyncpg
-import config
 from config import TOKEN, chat_id_to_forward, admins_id
 from database import database_connect
 import mysql.connector
 import telebot
 from aiogram.dispatcher.filters.state import State, StatesGroup
 import mysql.connector
-import sshtunnel
 
 bot = telebot.TeleBot("6286125677:AAG_FPor6xFejfPNDqrz-H9PuKvYZTxJza4")
 bot = Bot(token=TOKEN)
@@ -144,9 +137,17 @@ async def enter_phone_number(message: types.Message, state: FSMContext):
     # Фиксируем изменения в базе данных
     mydb.commit()
 
-    mycursor.execute("SELECT ID FROM orders2 ORDER BY ID DESC LIMIT 1")
+    mycursor.fetchall()  # Fetch all results from the INSERT query
 
-    await message.answer(f'✅ Заказ успешно добавлен!')
+    mycursor.execute("SELECT ID, Name FROM orders2 ORDER BY ID DESC LIMIT 1")
+    result = mycursor.fetchone()
+    product_name = result[1]
+
+
+
+    await message.answer(f'✅ Заказ успешно добавлен!'
+                         f'\n\n🚗 {message.from_user.full_name}, спасибо что оставили заявку на покупку "{product_name}" для своего автомобиля.'
+                         f'\n\n⌛ Ожидайте, скоро с вами свяжется менеджер компании для уточнения деталей.')
 
     await bot.send_message(chat_id=chat_id_to_forward, text="❗ Поступил новый заказ по гос.номеру или VIN номеру автомобиля❗"
                                                             "\n\nПроверьте вкладку '📝 Заказы оформленные по VIN или гос.номеру' через админ панель /admin")
@@ -525,9 +526,10 @@ async def enter_product_url(message: types.Message, state: FSMContext):
     product_price = data.get('product_price')
     product_url = data.get('product_url')
 
+
     try:
         product_id = await add_product_to_db(product_name, manufacturer, product_type, product_quantity, product_price, product_url)
-        await message.answer(f'✅ Новый товар успешно добавлен на склад! ID: {product_id}')
+        await message.answer(f'✅ Новый товар успешно добавлен на склад!')
     except mysql.connector.Error as e:
         await message.answer(f'❌ Ошибка добавления товара: {e}')
     finally:
@@ -538,18 +540,14 @@ async def add_product_to_db(product_name, manufacturer, product_type, product_qu
     mycursor = mydb.cursor()
     sql = "INSERT INTO product (Name, Manufacturer, Type, Quantity, Price, Url) VALUES (%s, %s, %s, %s, %s, %s)"
     values = (product_name, manufacturer, product_type, product_quantity, product_price, product_url)
-    try:
-        mycursor.execute(sql, values)
-        mydb.commit()
-        mycursor.execute("SELECT ID FROM product ORDER BY ID DESC LIMIT 1")
-        result = mycursor.fetchone()
-        return result[0]
-    except mysql.connector.Error as e:
-        mydb.rollback()
-        raise e
-    finally:
-        mycursor.close()
-        mydb.close()
+    mycursor.execute(sql, values)
+    mydb.commit()
+    mycursor.execute("SELECT ID FROM product ORDER BY ID DESC LIMIT 1")
+    result = mycursor.fetchone()
+    product_id = result[0]
+
+
+
 
 
 
